@@ -1,3 +1,8 @@
+import matplotlib.pyplot as plt
+import math
+import numpy as np
+import Common
+
 class ToursVisualizer:
     """
     Class used to visualize the computed complex of tours. 
@@ -26,25 +31,36 @@ class ToursVisualizer:
         # setup colors of the drawing
         plt.gca().set_prop_cycle(plt.cycler('color', plt.cm.gist_ncar(np.linspace(0, 0.95, len(self.tours)))))
         
-        # add coordinate of first point
-        coordinates = [(0,0)]
+        theta = - math.pi/2 # first point is at six o'clock w.r.t. the others
         
-        theta = - math.pi/2 # first point is at six o'clock
+        origin_node = self.tours[0][0]
+        # last_node will be the last visited node, apart from the origin node
+        last_node = origin_node # initialize last_node as the origin_node
+        D=0
         for tour in self.tours:
-            for i in range(1,len(tour)):
-                d = self.__get_distance(tour[i-1], tour[i])
+            Common.debug("tour: ", tour)
+            # add coordinate of first point
+            coordinates = [(0,0)]
+            for i in range(1,len(tour)-1): # index 0 and last index are just the origin node
+                Common.debug("get distance between ", last_node, " and ", tour[i])
+                d = self.__get_distance(last_node, tour[i])
+                D += d
                 delta_theta = d / self.length * 2 * math.pi
                 theta += delta_theta
+                
                 x = radius * math.cos(theta)
                 y = radius * math.sin(theta) + radius
-
+                
                 coordinates.append((x,y))
-
+                last_node = tour[i]
+            
+            coordinates.append((0,0)) # add coordinate of last point
             xs, ys = zip(*coordinates)
             plt.plot(xs, ys, label="tour n° " + str(self.tours.index(tour)))
             plt.plot(xs, ys, 'k+') # black pluses represeting nodes
         
+        Common.debug("Theta: ", theta)
+        Common.debug("D: ", D)
         plt.plot(0,0,'ro') # a red dot to show the starting point
-        plt.legend(loc='center')
+        plt.legend(loc='best')
         plt.axis('off')
-        return plt.gca()
