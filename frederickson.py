@@ -1,9 +1,9 @@
-import sys
-from Christofides import christofides_tsp
-from Errors import *
+from christofides import christofides_tsp
+from errors import *
+
 
 class Frederickson:
-    
+
     def __init__(self, distance_matrix, m):
         self.distance_matrix = distance_matrix
         self.m = m
@@ -12,14 +12,14 @@ class Frederickson:
 
     def __get_distance(self, i,j):
         return self.distance_matrix[i][j]
-    
+
     def get_global_tour(self):
-        if self.__global_tour_calculated == True:
+        if self.__global_tour_calculated:
             return self.__global_tour
         else:
             raise IllegalStateError("The global tour has not been calculated yet")
 
-    def get_distance_along_path(self, i,j,path):
+    def get_distance_along_path(self, i, j, path):
         i_found = False
         j_found = False
         i_index = None
@@ -50,24 +50,24 @@ class Frederickson:
         tour, length = self.__find_1_tour()
         self.__global_tour = tour
         self.__global_tour_calculated = True
-        
+
         # Step 2
         # For each agent, find the last vertex such that the cost from the origin, along its path,
         # is not greater than (j/m) * (length - 2*cmax)+cmax
         last_vertex = self.__last_vertices(tour, length)
-        
+
         # Step 3
         # Obtain the j-tour by forming a subtour that:
         # - starts in the origin node reaching last_vertex[j-1]
         # - follows the global solution up to last_vertex[j]
         # - returns to the origin_node
         paths = self.__calculate_paths(last_vertex, tour)
-        
+
         return paths
 
     def __find_1_tour(self):
         return christofides_tsp(self.distance_matrix)
-            
+
     def __last_vertices(self, tour, length):
         origin_node = tour[0]
         cmax = max(self.distance_matrix[origin_node])
@@ -101,12 +101,12 @@ class Frederickson:
             path_j = [origin_node]
             path_j.extend(tour[last_vertex_index[j-1]+1:last_vertex_index[j]+1])
             path_j.append(origin_node)
-            
+
             paths.append(path_j)
-            
+
         # last agent
         path_last = [origin_node]
         path_last.extend(tour[last_vertex_index[j]+1:])
         paths.append(path_last)
-        
+
         return paths
