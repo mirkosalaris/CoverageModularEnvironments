@@ -15,7 +15,6 @@ import random
 #           i.e., 1->0->2->1 can be rearrenged as 0->2->1->0
 ###
 def christofides_tsp(data):
-
     # build a graph
     G = build_graph(data)
 
@@ -46,7 +45,7 @@ def christofides_tsp(data):
             current = v
 
     # this line was here, but I don't get why, and it causes an error
-    #length += G[tour[-1]][tour[0]]
+    # length += G[tour[-1]][tour[0]]
 
     return tour, length
 
@@ -186,7 +185,6 @@ def find_eulerian_tour(MatchedMSTree, G):
 
 
 def remove_edge_from_matchedMST(MatchedMST, v1, v2):
-
     for i, item in enumerate(MatchedMST):
         if (item[0] == v2 and item[1] == v1) or (item[0] == v1 and item[1] == v2):
             del MatchedMST[i]

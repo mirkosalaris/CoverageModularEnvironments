@@ -1,5 +1,6 @@
 import common
 
+
 class ModularMatrix:
     """A Modular Matrix is like a usual distance matrix but it consists of repeated modules, meaning that it can be
     efficiently represented by a base matrix, that represent a module, repeated many times, connected by an edge"""
@@ -27,7 +28,7 @@ class ModularMatrix:
             if isinstance(item[0], slice) or isinstance(item[1], slice):
                 raise NotImplementedError("Slicing not yet implemented")
 
-            return self.__get_single_item__(item)
+            return self.__get_single_item(item)
 
         else:  # integer index
             # TODO: this should return a vector
@@ -36,7 +37,7 @@ class ModularMatrix:
     def __len__(self):
         return len(self.base_matrix) * self.number_of_modules
 
-    def __get_single_item__(self, item):
+    def __get_single_item(self, item):
 
         #                   i
         # |_________________.______          _

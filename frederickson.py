@@ -10,8 +10,8 @@ class Frederickson:
         self.__global_tour_calculated = False
         self.__global_tour = None
 
-    def __get_distance(self, i,j):
-        return self.distance_matrix[i,j]
+    def __get_distance(self, i, j):
+        return self.distance_matrix[i, j]
 
     def get_global_tour(self):
         if self.__global_tour_calculated:
@@ -33,13 +33,14 @@ class Frederickson:
                 j_index = index
                 j_found = True
 
-        if not (i_found and j_found): # 'j' is unreachable from 'i', going along path
-            raise LookupError("The node " + str(j) + " is unreachable starting from " + str(i) + " and going along path " + str(path))
+        if not (i_found and j_found):  # 'j' is unreachable from 'i', going along path
+            raise LookupError(
+                "The node " + str(j) + " is unreachable starting from " + str(i) + " and going along path " + str(path))
 
         # ok, proceed
         previous = i_index
         cost = 0
-        for k in range(i_index+1, j_index+1):
+        for k in range(i_index + 1, j_index + 1):
             cost += self.__get_distance(path[previous], path[k])
             previous = k
 
@@ -75,38 +76,38 @@ class Frederickson:
         next_i = 1
         next_vertex = tour[0]
 
-
         last_vertex_index = [None] * self.m
-        for j in range(0, self.m-1): # iterate on agents
-            max_cost = self.__get_distance(origin_node, origin_node) # should be zero, but let's be safe
-            for i in range(next_i,len(tour)):
-                path_cost = self.__get_distance(origin_node, next_vertex) + self.get_distance_along_path(next_vertex, tour[i], tour)
-                if path_cost <= (j/self.m)*(length - 2*cmax) + cmax:
+        for j in range(0, self.m - 1):  # iterate on agents
+            for i in range(next_i, len(tour)):
+                path_cost = self.__get_distance(origin_node, next_vertex) \
+                            + self.get_distance_along_path(next_vertex, tour[i], tour)
+                if path_cost <= (j / self.m) * (length - 2 * cmax) + cmax:
                     last_vertex_index[j] = i
 
             next_i = last_vertex_index[j] + 1
             next_vertex = tour[next_i]
 
-        last_vertex_index[-1] = len(tour) - 1 # the last element
+        last_vertex_index[-1] = len(tour) - 1  # the last element
         return last_vertex_index
 
     def __calculate_paths(self, last_vertex_index, tour):
         origin_node = tour[0]
         paths = []
-        path_0 = tour[0:last_vertex_index[0]+1]
+        path_0 = tour[0:last_vertex_index[0] + 1]
         path_0.append(origin_node)
         paths.append(path_0)
-        j=0
-        for j in range(1, self.m-1):
+        j = 0
+        for j in range(1, self.m - 1):
             path_j = [origin_node]
-            path_j.extend(tour[last_vertex_index[j-1]+1:last_vertex_index[j]+1])
+            path_j.extend(tour[last_vertex_index[j - 1] + 1:last_vertex_index[j] + 1])
             path_j.append(origin_node)
 
             paths.append(path_j)
 
         # last agent
         path_last = [origin_node]
-        path_last.extend(tour[last_vertex_index[j]+1:])
+        path_last.extend(tour[last_vertex_index[j] + 1:])
         paths.append(path_last)
 
         return paths
+
