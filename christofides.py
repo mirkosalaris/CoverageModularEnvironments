@@ -4,7 +4,8 @@ import random
 
 ### Solve the TSP by means of Christofides' algorithm
 #
-# INPUT:	"data" is a distance matrix in the form D[i][j]
+# INPUT:	"data" is a distance matrix in the form D[i, j].
+#           It can be a ModularMatrix or a numpy matrix
 #
 # OUTPUT:	"tour" is the final TSP solution, while "length"
 #			is the solution length (i.e. the cost)
@@ -58,7 +59,7 @@ def build_graph(data):
                 if this not in graph:
                     graph[this] = {}
 
-                graph[this][another_point] = data[this][another_point]
+                graph[this][another_point] = data[this, another_point]
 
     return graph
 

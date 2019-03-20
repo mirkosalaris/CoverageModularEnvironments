@@ -11,7 +11,7 @@ class Frederickson:
         self.__global_tour = None
 
     def __get_distance(self, i,j):
-        return self.distance_matrix[i][j]
+        return self.distance_matrix[i,j]
 
     def get_global_tour(self):
         if self.__global_tour_calculated:
@@ -70,7 +70,7 @@ class Frederickson:
 
     def __last_vertices(self, tour, length):
         origin_node = tour[0]
-        cmax = max(self.distance_matrix[origin_node])
+        cmax = max([self.distance_matrix[origin_node, i] for i in range(len(self.distance_matrix))])
 
         next_i = 1
         next_vertex = tour[0]
