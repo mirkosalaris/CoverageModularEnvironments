@@ -1,4 +1,4 @@
-import common
+from common import logger
 
 
 class ModularMatrix:
@@ -58,12 +58,11 @@ class ModularMatrix:
 
         lower_index = min(item)
         upper_index = max(item)
-
-        common.debug("lower: ", lower_index, " upper: ", upper_index)
+        logger.debug("lower: " + str(lower_index) + " upper: " + str(upper_index))
 
         # number of modules that separate the two nodes
         number_of_modules = (upper_index // self.base_size) - (lower_index // self.base_size)
-        common.debug("number of modules: ", number_of_modules)
+        logger.debug("number of modules: " + str(number_of_modules))
 
         if number_of_modules == 0:
             return self.base_matrix[lower_index % self.base_size][upper_index % self.base_size]
@@ -72,15 +71,15 @@ class ModularMatrix:
 
         # distance from the lower node to the connection node of the respective module
         d_lower_to_conn_node = self.base_matrix[lower_index % self.base_size][self.connection_node]
-        common.debug("lower to conn: ", d_lower_to_conn_node)
+        logger.debug("lower to conn: " + str(d_lower_to_conn_node))
 
         # distance from connection node of one module to the connection node of the other
         d_conn_to_conn = self.distance_between_modules * number_of_modules
-        common.debug("conn to conn: ", d_conn_to_conn)
+        logger.debug("conn to conn: " + str(d_conn_to_conn))
 
         # distance from the upper node to the connection node of the respective module
         d_upper_to_conn = self.base_matrix[self.connection_node][upper_index % self.base_size]
-        common.debug("upper to conn: ", d_upper_to_conn)
+        logger.debug("upper to conn: " + str(d_upper_to_conn))
 
         return d_lower_to_conn_node + d_conn_to_conn + d_upper_to_conn
 

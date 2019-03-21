@@ -3,7 +3,7 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 
-import common
+from common import logger
 
 
 class ToursVisualizer:
@@ -41,11 +41,11 @@ class ToursVisualizer:
         last_node = origin_node  # initialize last_node as the origin_node
         D = 0
         for tour in self.tours:
-            common.debug("tour: ", tour)
+            logger.debug("tour: ", tour)
             # add coordinate of first point
             coordinates = [(0, 0)]
             for i in range(1, len(tour) - 1):  # index 0 and last index are just the origin node
-                common.debug("get distance between ", last_node, " and ", tour[i])
+                logger.debug("get distance between " + str(last_node) + " and " + str(tour[i]))
                 d = self.__get_distance(last_node, tour[i])
                 D += d
                 delta_theta = d / self.length * 2 * math.pi
@@ -60,10 +60,10 @@ class ToursVisualizer:
             coordinates.append((0, 0))  # add coordinate of last point
             xs, ys = zip(*coordinates)
             plt.plot(xs, ys, label="tour n° " + str(self.tours.index(tour)))
-            plt.plot(xs, ys, 'k+')  # black pluses represeting nodes
+            plt.plot(xs, ys, 'k+')  # black pluses representing nodes
 
-        common.debug("Theta: ", theta)
-        common.debug("D: ", D)
+        logger.debug("Theta: " + str(theta))
+        logger.debug("D: " + str(D))
         plt.plot(0, 0, 'ro')  # a red dot to show the starting point
         plt.legend(loc='best')
         plt.axis('off')
