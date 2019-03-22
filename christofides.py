@@ -47,6 +47,8 @@ def christofides_tsp(data):
     # this line was here, but I don't get why, and it causes an error
     # length += G[tour[-1]][tour[0]]
 
+    tour = shift_tour(tour)
+
     return tour, length
 
 
@@ -190,3 +192,15 @@ def remove_edge_from_matchedMST(MatchedMST, v1, v2):
             del MatchedMST[i]
 
     return MatchedMST
+
+
+def shift_tour(tour, origin_node=0):
+    """Shift the tour representation such that it starts from the origin_node"""
+    assert tour[0] == tour[-1]
+
+    if tour[0] != origin_node:
+        tour.pop(0)  # remove first element
+        shift = tour.index(origin_node)  # calculate how much to shift
+
+        # shift and add at the end the origin_node
+        return tour[shift:] + tour[:shift] + [origin_node]
