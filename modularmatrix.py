@@ -1,4 +1,5 @@
 from common import logger
+from errors import IllegalParameterError
 
 
 class ModularMatrix:
@@ -6,6 +7,9 @@ class ModularMatrix:
     efficiently represented by a base matrix, that represent a module, repeated many times, connected by an edge"""
 
     def __init__(self, module_matrix, distance_between_modules, number_of_modules, connection_node=0):
+        assert isinstance(distance_between_modules, int) and distance_between_modules >= 0
+        assert isinstance(number_of_modules, int) and number_of_modules > 0
+
         self.base_matrix = module_matrix
         self.distance_between_modules = distance_between_modules
         self.number_of_modules = number_of_modules
@@ -38,7 +42,10 @@ class ModularMatrix:
         return len(self.base_matrix) * self.number_of_modules
 
     def __get_single_item(self, item):
-
+        """
+        :param item: tuple of int. Its length must coincide with the number of dimensions of the matrix.
+        :return: int The distance between the elements in the tuple
+        """
         #                   i
         # |_________________.______          _
         # |  ^                                |
@@ -61,7 +68,7 @@ class ModularMatrix:
         logger.debug("lower: " + str(lower_index) + " upper: " + str(upper_index))
 
         # number of modules that separate the two nodes
-        number_of_modules = (upper_index // self.base_size) - (lower_index // self.base_size)
+        number_of_modules = self.get_module(upper_index) - self.get_module(lower_index)
         logger.debug("number of modules: " + str(number_of_modules))
 
         if number_of_modules == 0:
@@ -85,3 +92,73 @@ class ModularMatrix:
 
     def ndim(self):
         return 2
+
+    def get_module(self, node_index):
+        return node_index // self.base_size
+
+    def get_distance_along_path(self, i, j, path):
+        # flags
+        i_found = False
+        j_found = False
+
+        # indexes of the two nodes in the path
+        i_index = None
+        j_index = None
+        for index, node in enumerate(path):
+            if (not i_found) and i == node:
+                i_index = index
+                i_found = True
+
+            if i_found and j == node:
+                j_index = index
+                j_found = True
+
+        if not (i_found and j_found):  # 'j' is unreachable from 'i', going along path
+            raise LookupError(
+                "The node " + str(j) + " is unreachable starting from " + str(i) + " and going along path " + str(path))
+
+        # ok, proceed
+        previous = i_index
+        cost = 0
+        for k in range(i_index + 1, j_index + 1):
+            cost += self.__get_distance(path[previous], path[k])
+            previous = k
+
+        return cost
+
+    def get_tour_length(self, tour):
+        if len(tour) == 0:
+            return 0
+
+        last_node = tour[0]
+        distance = 0
+        for i in range(1, len(tour)):
+            distance += self.__get_distance(last_node, tour[i])
+            logger.debug("get distance between " + str(last_node) + " and " + str(tour[i]))
+            logger.debug("Which is: " + str(self.__get_distance(last_node, tour[i])))
+            last_node = tour[i]
+
+        return distance
+
+    def get_nodes_in_module(self, module):
+        if not isinstance(module, int):
+            raise IllegalParameterError("Expected an integer, got " + str(type(module)))
+        elif module <= 0:
+            raise IllegalParameterError("Module must be a positive integer")
+
+        base_nodes = list(range(0, self.base_size))
+        displacement = self.base_size * (module - 1)  # module - 1 because module indexes start from 1
+        return [node + displacement for node in base_nodes]
+
+    def get_module_entrance_node(self, module):
+        if not isinstance(module, int):
+            raise IllegalParameterError("Expected an integer, got " + str(type(module)))
+        elif module <= 0:
+            raise IllegalParameterError("Module must be a positive integer")
+
+        displacement = self.base_size * (module - 1)  # module - 1 because module indexes start from 1
+
+        return self.connection_node + displacement
+
+    def __get_distance(self, i, j):
+        return self[i, j]

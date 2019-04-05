@@ -2,12 +2,15 @@ import logging
 
 __all__ = ["logger"]
 
+
+# SET THESE TWO #
+stream_level = 1  # 0 for debug, 1 for debug, 2 for warning
+file_level = 0  # 0 for debug, 1 for info, 2 for warning
+#################
+
 LOGGER_NAME = "main_logger"
 LOG_FILENAME = "info.log"
 LEVELS = [logging.DEBUG, logging.INFO, logging.WARNING]
-
-stream_level = 1  # 0 for info, 1 for debug, 2 for warning
-file_level = 0  # 0 for info, 1 for debug, 2 for warning
 
 logger = logging.getLogger(LOGGER_NAME)
 logger.setLevel(LEVELS[0])  # set global level. It must be the lowest possible
