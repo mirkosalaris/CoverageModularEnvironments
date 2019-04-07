@@ -47,6 +47,9 @@ def christofides_tsp(data):
     # this line was here, but I don't get why, and it causes an error
     # length += G[tour[-1]][tour[0]]
 
+    # TODO: the temporary fix breaks the "optimality". It is useful to be able to develop the other parts but should be
+    #  fixed before any analysis
+    tour = temporary_fix(tour)
     tour = shift_tour(tour)
 
     return tour, length
@@ -204,3 +207,39 @@ def shift_tour(tour, origin_node=0):
 
         # shift and add at the end the origin_node
         return tour[shift:] + tour[:shift] + [origin_node]
+
+
+def temporary_fix(tour):
+    # *********************
+    # IMPORTANT: The few following lines are just a TEMPORARY FIX.
+    #
+    # Bug description:
+    # The ch. algorithm is supposed to return an ordered list of nodes, without repetitions but the first and last
+    # node that must coincide (to have a circular path).
+    # This sometimes does not happen. It contains repetitions. When it happens the first and the last node never
+    # coincide.
+    # The following lines ensures that first and last node are the same node and that there are not other repeated
+    # nodes in the list.
+    #
+    # The following matrix reproduces the error:
+    #  np.array([[   0.,   15.,   84.,    1.,   16.,   85.],
+    #           [  15.,    0.,   91.,   16.,   31.,  100.],
+    #           [  84.,   91.,    0.,   85.,  100.,  169.],
+    #           [   1.,   16.,   85.,    0.,   15.,   84.],
+    #           [  16.,   31.,  100.,   15.,    0.,   91.],
+    #           [  85.,  100.,  169.,   84.,   91.,    0.]])
+    #
+    #
+    # *********************
+    if tour[0] != tour[-1]:
+        tour_set = set([])
+        tour_fixed = []
+        for i in range(len(tour)):
+            if tour[i] not in tour_set:
+                tour_set.add(tour[i])
+                tour_fixed.append(tour[i])
+
+        tour_fixed.append(tour[0])
+        tour = tour_fixed
+
+    return tour
