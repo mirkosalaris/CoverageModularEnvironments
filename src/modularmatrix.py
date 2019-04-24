@@ -6,12 +6,20 @@ class ModularMatrix:
     """A Modular Matrix is like a usual distance matrix but it consists of repeated modules, meaning that it can be
     efficiently represented by a base matrix, that represent a module, repeated many times, connected by an edge"""
 
-    def __init__(self, module_matrix, distance_between_modules, number_of_modules, connection_node=0):
-        assert isinstance(distance_between_modules, int) and distance_between_modules >= 0
-        assert isinstance(number_of_modules, int) and number_of_modules > 0
+    def __init__(self, module_matrix, distances_between_modules, number_of_modules, connection_node=0):
+        """
+
+        :param module_matrix: a 2d matrix of float, where the indexes are the nodes indexes and the value is the
+        distance between the two nodes
+        :param distances_between_modules: an array of distances. It has length == number_of_modules - 1. Each value
+        is the distance between the 'current' module and the next one
+        :param number_of_modules: (int) the number of modules
+        :param connection_node: node directly communicating with other modules. Defaults to 0.
+        """
+        assert isinstance(number_of_modules, int) and number_of_modules > 0, "The number of modules must be integer"
 
         self.base_matrix = module_matrix
-        self.distance_between_modules = distance_between_modules
+        self.distances_between_modules = distances_between_modules
         self.number_of_modules = number_of_modules
         self.connection_node = connection_node
 
@@ -81,7 +89,9 @@ class ModularMatrix:
         logger.debug("lower to conn: " + str(d_lower_to_conn_node))
 
         # distance from connection node of one module to the connection node of the other
-        d_conn_to_conn = self.distance_between_modules * number_of_modules
+        lm = self.get_module(lower_index) - 1  # modules are indexed starting from 1
+        um = self.get_module(upper_index) - 1  # modules are indexed starting from 1
+        d_conn_to_conn = sum(self.distances_between_modules[lm:um])
         logger.debug("conn to conn: " + str(d_conn_to_conn))
 
         # distance from the upper node to the connection node of the respective module
