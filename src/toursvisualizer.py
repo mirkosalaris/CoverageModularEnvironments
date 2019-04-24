@@ -1,3 +1,5 @@
+__all__ = ["FredToursVisualizer", "IntToursVisualizer"]
+
 import math
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,63 +17,16 @@ class ToursVisualizer:
     'distances': matrix of distances between the nodes
     """
 
-    def __init__(self, tours, global_tour, distances):
+    def __init__(self, tours, distances):
         assert isinstance(distances, ModularMatrix), "The distance matrix must be a modular matrix"
+        # the two concrete classes initialize this attribute before calling super.__init__
+        assert self.length is not None, "ToursVisualizer has not been initialized properly. Attribute length is None"
 
-        self.length = distances.get_tour_length(global_tour)
-        self.global_tour = global_tour
         self.tours = tours
         self.distances = distances
 
-    def __get_distance(self, i, j):
+    def _get_distance(self, i, j):
         return self.distances[i, j]
-
-    def draw_module(self, module):
-        nodes = self.distances.get_nodes_in_module(module)
-        # assumption: the global tour doesn't jump from a module to the other
-        start = None
-        end = None
-        logger.debug("Nodes:" + str(nodes))
-        logger.debug("Global tour:" + str(self.global_tour))
-        for i in range(0, len(self.global_tour) - 1):  # NB: NOT the final node!
-            if start is None and self.global_tour[i] in nodes:
-                start = i
-            elif self.global_tour[i] in nodes:
-                end = i
-
-        logger.debug("Start: " + str(start))
-        logger.debug("End: " + str(end))
-        module_entrance = self.distances.get_module_entrance_node(module)
-        module_inside = self.global_tour[start:end + 1]
-        module_tour = [module_entrance] + module_inside + [module_entrance]
-
-        # calculate coordinates of the points
-        coordinates = self.__spread_on_circle(module_tour, module_entrance)
-        entrance_coords = coordinates[0]
-
-        # split the coordinates in different sets to get the mapping agents-coordinates
-        split_coordinates, agents = self.__map_node_agents(coordinates, module_inside)
-
-        logger.debug("Split coordinates: " + str(split_coordinates))
-
-        ### PLOT ###
-
-        # slice the linspace to use only the colors corresponding to the agents
-        linspace = np.linspace(0, 0.95, len(self.tours))
-        sliced_linspace = linspace[agents]
-        cycler = plt.cycler('color', plt.cm.gist_ncar(sliced_linspace))
-
-        plt.gca().set_prop_cycle(cycler)
-        for i in range(len(split_coordinates)):
-            coords = split_coordinates[i]
-            xs, ys = zip(*coords)
-            xs, ys = self.__fix(xs, ys, entrance_coords)
-            plt.plot(xs, ys, label="Tour of agent n° " + str(agents[i]) + " in module " + str(module))
-            plt.plot(xs, ys, 'k+')
-
-        plt.plot(*entrance_coords, 'ro')  # a red dot to show the starting point
-        plt.legend(loc='best')
-        plt.axis('off')
 
     def draw(self, radius=1):
         """
@@ -96,7 +51,7 @@ class ToursVisualizer:
             coordinates = [(0, 0)]
             for i in range(1, len(tour) - 1):  # index 0 and last index are just the origin node
                 logger.debug("get distance between " + str(last_node) + " and " + str(tour[i]))
-                d = self.__get_distance(last_node, tour[i])
+                d = self._get_distance(last_node, tour[i])
                 logger.debug("Which is: " + str(d))
                 D += d
                 delta_theta = d / self.length * 2 * math.pi
@@ -110,8 +65,8 @@ class ToursVisualizer:
 
             coordinates.append((0, 0))  # add coordinate of last point
             xs, ys = zip(*coordinates)
-            plt.plot(xs, ys, label="tour n° " + str(self.tours.index(tour)))
             plt.plot(xs, ys, 'k+')  # black pluses representing nodes
+            plt.plot(xs, ys, label="tour n° " + str(self.tours.index(tour)))
 
         logger.debug("Theta: " + str(theta))
         logger.debug("D: " + str(D) + " Length: " + str(self.length))
@@ -119,7 +74,7 @@ class ToursVisualizer:
         plt.legend(loc='best')
         plt.axis('off')
 
-    def __spread_on_circle(self, tour, origin, radius=1):
+    def _spread_on_circle(self, tour, origin, radius=1):
         """
         :param tour: list of nodes that represents a circular (start=end) tour
         :param origin: start node
@@ -140,7 +95,7 @@ class ToursVisualizer:
         D = 0
         for node in tour:
             logger.debug("get distance between " + str(last_node) + " and " + str(node))
-            d = self.__get_distance(last_node, node)
+            d = self._get_distance(last_node, node)
             D += d
             delta_theta = d / tour_length * 2 * math.pi
             theta += delta_theta
@@ -153,7 +108,7 @@ class ToursVisualizer:
 
         return coordinates
 
-    def __map_node_agents(self, coordinates, module_inside_tour):
+    def _map_node_agents(self, coordinates, module_inside_tour):
         """
 
         :param coordinates: a list of 2-tuples
@@ -175,7 +130,7 @@ class ToursVisualizer:
 
         split_coordinates = []
 
-        first_agent, node_index = self.__find_first_in_tour(module_inside_tour)
+        first_agent, node_index = self._find_first_in_tour(module_inside_tour)
 
         # last used index for array coordinates (and 'module_inside_tour')
         c_index = 0
@@ -219,7 +174,7 @@ class ToursVisualizer:
 
         return split_coordinates, list(range(first_agent, agent))
 
-    def __find_first_in_tour(self, module_inside_tour):
+    def _find_first_in_tour(self, module_inside_tour):
         agent = 0
         node_index = 0
         found_first = False
@@ -242,8 +197,89 @@ class ToursVisualizer:
 
         return agent, node_index
 
-    def __fix(self, xs, ys, entrance_coords):
+    def _fix(self, xs, ys, entrance_coords):
         xs = (entrance_coords[0],) + xs + (entrance_coords[0],)
         ys = (entrance_coords[1],) + ys + (entrance_coords[1],)
 
         return xs, ys
+
+
+class FredToursVisualizer(ToursVisualizer):
+    def __init__(self, tours, global_tour, distances):
+        self.global_tour = global_tour
+        self.length = distances.get_tour_length(global_tour)
+        super().__init__(tours, distances)
+
+    def draw_module(self, module):
+        nodes = self.distances.get_nodes_in_module(module)
+        # assumption: the global tour doesn't jump from a module to the other
+        start = None
+        end = None
+        logger.debug("Nodes:" + str(nodes))
+        logger.debug("Global tour:" + str(self.global_tour))
+        for i in range(0, len(self.global_tour) - 1):  # NB: NOT the final node!
+            if start is None and self.global_tour[i] in nodes:
+                start = i
+            elif self.global_tour[i] in nodes:
+                end = i
+
+        logger.debug("Start: " + str(start))
+        logger.debug("End: " + str(end))
+        module_entrance = self.distances.get_module_entrance_node(module)
+        module_inside = self.global_tour[start:end + 1]
+        module_tour = [module_entrance] + module_inside + [module_entrance]
+
+        # calculate coordinates of the points
+        coordinates = self._spread_on_circle(module_tour, module_entrance)
+        entrance_coords = coordinates[0]
+
+        # split the coordinates in different sets to get the mapping agents-coordinates
+        split_coordinates, agents = self._map_node_agents(coordinates, module_inside)
+
+        logger.debug("Split coordinates: " + str(split_coordinates))
+
+        ### PLOT ###
+
+        # slice the linspace to use only the colors corresponding to the agents
+        linspace = np.linspace(0, 0.95, len(self.tours))
+        sliced_linspace = linspace[agents]
+        cycler = plt.cycler('color', plt.cm.gist_ncar(sliced_linspace))
+
+        plt.gca().set_prop_cycle(cycler)
+        for i in range(len(split_coordinates)):
+            coords = split_coordinates[i]
+            xs, ys = zip(*coords)
+            xs, ys = self._fix(xs, ys, entrance_coords)
+            plt.plot(xs, ys, label="Tour of agent n° " + str(agents[i]) + " in module " + str(module))
+            plt.plot(xs, ys, 'k+')
+
+        plt.plot(*entrance_coords, 'ro')  # a red dot to show the starting point
+        plt.legend(loc='best')
+        plt.axis('off')
+
+
+class IntToursVisualizer(ToursVisualizer):
+    # TODO: come up with a different visualization for this case.
+    # Example:        _
+    #  |----------     |
+    #  |----------     |
+    #  |----------     | --> blue
+    #  |----------     |
+    #  |----------    _|
+    #  |----------     |
+    #  |----------     | --> red
+    #  |----------    _|
+
+    def __init__(self, tours, distances):
+        self.length = self.__calculate_length(distances, tours)
+        super().__init__(tours, distances)
+
+    @staticmethod
+    def __calculate_length(distances, tours):
+        trimmed_tours = [t[1:-1] for t in tours]
+        origin = tours[0][0]
+
+        global_tour = [origin] + sum(trimmed_tours, []) + [origin]
+
+        length = distances.get_tour_length(global_tour)
+        return length
