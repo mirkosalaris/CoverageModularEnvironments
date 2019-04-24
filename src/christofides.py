@@ -1,3 +1,5 @@
+__all__ = ["christofides_tsp"]
+
 ### imports ###
 import random
 
@@ -16,19 +18,19 @@ import random
 ###
 def christofides_tsp(data):
     # build a graph
-    G = build_graph(data)
+    G = _build_graph(data)
 
     # build a minimum spanning tree
-    MSTree = minimum_spanning_tree(G)
+    MSTree = _minimum_spanning_tree(G)
 
     # find odd vertexes
-    odd_vertexes = find_odd_vertexes(MSTree)
+    odd_vertexes = _find_odd_vertexes(MSTree)
 
     # add minimum weight matching edges to MST
-    minimum_weight_matching(MSTree, G, odd_vertexes)
+    _minimum_weight_matching(MSTree, G, odd_vertexes)
 
     # find an eulerian tour
-    eulerian_tour = find_eulerian_tour(MSTree, G)
+    eulerian_tour = _find_eulerian_tour(MSTree, G)
 
     current = eulerian_tour[0]
     tour = [current]
@@ -49,13 +51,13 @@ def christofides_tsp(data):
 
     # TODO: the temporary fix breaks the "optimality". It is useful to be able to develop the other parts but should be
     #  fixed before any analysis
-    tour = temporary_fix(tour)
-    tour = shift_tour(tour)
+    tour = _temporary_fix(tour)
+    tour = _shift_tour(tour)
 
     return tour, length
 
 
-def build_graph(data):
+def _build_graph(data):
     graph = {}
     for this in range(len(data)):
         for another_point in range(len(data)):
@@ -68,7 +70,7 @@ def build_graph(data):
     return graph
 
 
-class UnionFind:
+class _UnionFind:
     def __init__(self):
         self.weights = {}
         self.parents = {}
@@ -103,9 +105,9 @@ class UnionFind:
                 self.parents[r] = heaviest
 
 
-def minimum_spanning_tree(G):
+def _minimum_spanning_tree(G):
     tree = []
-    subtrees = UnionFind()
+    subtrees = _UnionFind()
     for W, u, v in sorted((G[u][v], u, v) for u in G for v in G[u]):
         if subtrees[u] != subtrees[v]:
             tree.append((u, v, W))
@@ -114,7 +116,7 @@ def minimum_spanning_tree(G):
     return tree
 
 
-def find_odd_vertexes(MST):
+def _find_odd_vertexes(MST):
     tmp_g = {}
     vertexes = []
     for edge in MST:
@@ -134,7 +136,7 @@ def find_odd_vertexes(MST):
     return vertexes
 
 
-def minimum_weight_matching(MST, G, odd_vert):
+def _minimum_weight_matching(MST, G, odd_vert):
     random.shuffle(odd_vert)
 
     while odd_vert:
@@ -151,7 +153,7 @@ def minimum_weight_matching(MST, G, odd_vert):
         odd_vert.remove(closest)
 
 
-def find_eulerian_tour(MatchedMSTree, G):
+def _find_eulerian_tour(MatchedMSTree, G):
     # find neigbours
     neighbours = {}
     for edge in MatchedMSTree:
@@ -176,7 +178,7 @@ def find_eulerian_tour(MatchedMSTree, G):
         while len(neighbours[v]) > 0:
             w = neighbours[v][0]
 
-            remove_edge_from_matchedMST(MatchedMSTree, v, w)
+            _remove_edge_from_matchedMST(MatchedMSTree, v, w)
 
             del neighbours[v][(neighbours[v].index(w))]
             del neighbours[w][(neighbours[w].index(v))]
@@ -189,7 +191,7 @@ def find_eulerian_tour(MatchedMSTree, G):
     return EP
 
 
-def remove_edge_from_matchedMST(MatchedMST, v1, v2):
+def _remove_edge_from_matchedMST(MatchedMST, v1, v2):
     for i, item in enumerate(MatchedMST):
         if (item[0] == v2 and item[1] == v1) or (item[0] == v1 and item[1] == v2):
             del MatchedMST[i]
@@ -197,7 +199,7 @@ def remove_edge_from_matchedMST(MatchedMST, v1, v2):
     return MatchedMST
 
 
-def shift_tour(tour, origin_node=0):
+def _shift_tour(tour, origin_node=0):
     """Shift the tour representation such that it starts from the origin_node"""
     assert tour[0] == tour[-1]
 
@@ -209,7 +211,7 @@ def shift_tour(tour, origin_node=0):
         return tour[shift:] + tour[:shift] + [origin_node]
 
 
-def temporary_fix(tour):
+def _temporary_fix(tour):
     # *********************
     # IMPORTANT: The few following lines are just a TEMPORARY FIX.
     #
