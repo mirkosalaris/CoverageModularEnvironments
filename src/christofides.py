@@ -35,6 +35,7 @@ def christofides_tsp(data):
     current = eulerian_tour[0]
     tour = [current]
     visited = [False] * len(eulerian_tour)
+    visited[current] = True
 
     length = 0
 
@@ -46,12 +47,11 @@ def christofides_tsp(data):
             length += G[current][v]
             current = v
 
-    # this line was here, but I don't get why, and it causes an error
-    # length += G[tour[-1]][tour[0]]
+    length += G[tour[-1]][tour[0]]
 
-    # TODO: the temporary fix breaks the "optimality". It is useful to be able to develop the other parts but should be
-    #  fixed before any analysis
-    tour = _temporary_fix(tour)
+    # make it circular
+    tour.append(eulerian_tour[0])
+
     tour = _shift_tour(tour)
 
     return tour, length
