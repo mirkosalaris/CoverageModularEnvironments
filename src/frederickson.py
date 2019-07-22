@@ -1,5 +1,6 @@
 from christofides import christofides_tsp
 from errors import *
+from common import logger
 
 
 class Frederickson:
@@ -25,14 +26,15 @@ class Frederickson:
         # Step 2
         # For each agent, find the last vertex such that the cost from the origin, along its path,
         # is not greater than (j/m) * (length - 2*cmax)+cmax
-        last_vertex = self.__last_vertices(tour, length)
+        last_vertices = self.__last_vertices(tour, length)
+        logger.debug("last vertices: " +str(last_vertices))
 
         # Step 3
         # Obtain the j-tour by forming a subtour that:
         # - starts in the origin node reaching last_vertex[j-1]
         # - follows the global solution up to last_vertex[j]
         # - returns to the origin_node
-        paths = self.__calculate_paths(last_vertex, tour)
+        paths = self.__calculate_paths(last_vertices, tour)
 
         return paths
 
@@ -40,24 +42,31 @@ class Frederickson:
         return christofides_tsp(self.distance_matrix)
 
     def __last_vertices(self, tour, length):
+        """For each agent, find the last vertex such that the cost from the origin, along its path,
+        is not greater than (j/m) * (length - 2*cmax)+cmax, where m is the number of agents, j is the incremental
+        number of the agent under calculation and cmax is the cost to reach the most distant node"""
         origin_node = tour[0]
         cmax = max([self.distance_matrix[origin_node, i] for i in range(len(self.distance_matrix))])
+        logger.debug("cmax" + str(cmax) + "length" + str(length))
 
         next_i = 1
-        next_vertex = tour[0]
+        subtour_first_vertex = tour[1 if len(tour) > 0 else 0]  # tour[1] if available, otherwise tour[0]
 
         last_vertex_index = [None] * self.m
-        for j in range(0, self.m - 1):  # iterate on agents
-            for i in range(next_i, len(tour)):
-                path_cost = self.distance_matrix[origin_node, next_vertex] \
-                            + self.distance_matrix.get_distance_along_path(next_vertex, tour[i], tour)
-                if path_cost <= (j / self.m) * (length - 2 * cmax) + cmax:
+        for j in range(0, self.m - 1):  # iterate on agents, finding the "last vertex" for each path
+
+            j_cost_limit = (j / self.m) * (length - 2 * cmax) + cmax
+
+            for i in range(next_i, len(tour)-1):  # the -1 is because the origin node is duplicated!
+                path_cost = self.distance_matrix[origin_node, subtour_first_vertex] \
+                            + self.distance_matrix.get_distance_along_path(subtour_first_vertex, tour[i], tour)
+                if path_cost <= j_cost_limit:
                     last_vertex_index[j] = i
 
             next_i = last_vertex_index[j] + 1
-            next_vertex = tour[next_i]
+            subtour_first_vertex = tour[next_i]
 
-        last_vertex_index[-1] = len(tour) - 1  # the last element
+        last_vertex_index[-1] = tour[len(tour) - 2] if len(tour) > 2 else 0  # index of the last element
         return last_vertex_index
 
     def __calculate_paths(self, last_vertex_indexes, tour):

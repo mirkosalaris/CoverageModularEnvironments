@@ -217,6 +217,8 @@ class FredToursVisualizer(ToursVisualizer):
         end = None
         logger.debug("Nodes:" + str(nodes))
         logger.debug("Global tour:" + str(self.global_tour))
+
+        # find the indexes between which there are the nodes of the current module
         for i in range(0, len(self.global_tour) - 1):  # NB: NOT the final node!
             if start is None and self.global_tour[i] in nodes:
                 start = i

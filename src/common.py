@@ -4,7 +4,7 @@ __all__ = ["logger"]
 
 
 # SET THESE TWO #
-stream_level = 1  # 0 for debug, 1 for debug, 2 for warning
+stream_level = 1  # 0 for debug, 1 for info, 2 for warning
 file_level = 0  # 0 for debug, 1 for info, 2 for warning
 #################
 

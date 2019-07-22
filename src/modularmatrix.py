@@ -92,7 +92,7 @@ class ModularMatrix:
         lm = self.get_module(lower_index) - 1  # modules are indexed starting from 1
         um = self.get_module(upper_index) - 1  # modules are indexed starting from 1
         d_conn_to_conn = sum(self.distances_between_modules[lm:um])
-        logger.debug("conn to conn: " + str(d_conn_to_conn))
+        logger.debug("conn to conn: [lm, um] " + str(d_conn_to_conn) + "[" + str(lm) + ", " + str(um) + "]")
 
         # distance from the upper node to the connection node of the respective module
         d_upper_to_conn = self.base_matrix[self.connection_node][upper_index % self.base_size]
@@ -104,7 +104,8 @@ class ModularMatrix:
         return 2
 
     def get_module(self, node_index):
-        return node_index // self.base_size
+        """return the incremental number of the module, starting from 1"""
+        return node_index // self.base_size + 1  # +1, so that module indexes start from 1
 
     def get_distance_along_path(self, i, j, path):
         # flags
@@ -172,3 +173,15 @@ class ModularMatrix:
 
     def __get_distance(self, i, j):
         return self[i, j]
+
+    def generate_matrix(self):
+        import numpy as np
+        distances = np.zeros((len(self), len(self)))
+        for i in range(len(self)):
+            for j in range(len(self)):
+                distances[i, j] = self[i, j]
+
+        return distances
+
+    def get_base_matrix(self):
+        return self.base_matrix.copy()
