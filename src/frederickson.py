@@ -63,6 +63,11 @@ class Frederickson:
                 if path_cost <= j_cost_limit:
                     last_vertex_index[j] = i
 
+            # This happens when the previous agents already covered the whole graph
+            if last_vertex_index[j] is None:
+                # -1 because we start counting from 0 and another -1 because the origin node is repeated twice
+                last_vertex_index[j] = len(tour)-2
+
             next_i = last_vertex_index[j] + 1
             subtour_first_vertex = tour[next_i]
 
