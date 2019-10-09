@@ -17,6 +17,9 @@ import random
 #           i.e., 1->0->2->1 can be rearrenged as 0->2->1->0
 ###
 def christofides_tsp(data):
+
+    random.seed(0)  # to ensure reproducibility
+
     # build a graph
     G = _build_graph(data)
 
