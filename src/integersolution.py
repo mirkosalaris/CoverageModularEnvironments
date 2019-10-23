@@ -70,12 +70,11 @@ def _recursive_interesting_split_points(splits, agents_number, lower, upper, int
     _recursive_interesting_split_points(
         splits, _lower_m(agents_number), lower, main_split, interesting_split_points)
 
-    # add the main split point
-    # interesting_split_points.append(main_split)
-
-    # add to the array all the split points that come AFTER the main one
-    _recursive_interesting_split_points(
-        splits, _upper_m(agents_number), main_split + 1, upper, interesting_split_points)
+    # if there still is an "upper" part to visit (if the "lower" part does NOT coincide with the whole part)
+    if main_split != upper:
+        # add to the array all the split points that come AFTER the main one
+        _recursive_interesting_split_points(
+            splits, _upper_m(agents_number), main_split + 1, upper, interesting_split_points)
 
 
 def _intervals_from_split_points(origin_node: int, splits: dict, m: int, p: int) -> list:
@@ -118,7 +117,7 @@ def _calculate_split_points(m, p, connections, tour_length):
     :param p: the number of modules
     :param connections: an array containing the distances between consequent modules
     :param tour_length: the length of the path inside a single module
-    :return: a dict of `Split`s
+    :return: a dict of `Split`s indexed with tuples (lower_module, upper_module, number of agents)
     """
     splits = {}
 
