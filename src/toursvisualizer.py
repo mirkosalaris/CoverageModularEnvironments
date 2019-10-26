@@ -1,3 +1,5 @@
+from environment import Environment
+
 __all__ = ["FredToursVisualizer", "IntToursVisualizer"]
 
 import math
@@ -5,28 +7,26 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from common import logger
-from modularmatrix import ModularMatrix
 
 
 class ToursVisualizer:
-    """
-    Class used to visualize the computed complex of tours.
 
-    'tours': an array whose element are the single tours of the agents.
-    'length': total length. Sum of the lengths of all the single tours.
-    'distances': matrix of distances between the nodes
-    """
+    def __init__(self, tours: list, environment: Environment):
+        """
+        Class used to visualize the computed tours.
 
-    def __init__(self, tours, distances):
-        assert isinstance(distances, ModularMatrix), "The distance matrix must be a modular matrix"
+        :param tours: an array whose element are the single tours of the agents.
+        :param environment: Environment object that describes the environment in term of distances between nodes
+        """
+
         # the two concrete classes initialize this attribute before calling super.__init__
         assert self.length is not None, "ToursVisualizer has not been initialized properly. Attribute length is None"
 
         self.tours = tours
-        self.distances = distances
+        self.environment = environment
 
     def _get_distance(self, i, j):
-        return self.distances[i, j]
+        return self.environment[i, j]
 
     def draw(self, radius=1):
         """
@@ -87,7 +87,7 @@ class ToursVisualizer:
 
         assert tour[0] == tour[-1], "The module tour must be circular"
 
-        tour_length = self.distances.get_distance_along_path(origin, origin, tour)
+        tour_length = self.environment.get_distance_along_path(origin, origin, tour)
         coordinates = []
         last_node = origin  # initialize last_node as the origin_node
 
@@ -211,7 +211,7 @@ class FredToursVisualizer(ToursVisualizer):
         super().__init__(tours, distances)
 
     def draw_module(self, module):
-        nodes = self.distances.get_nodes_in_module(module)
+        nodes = self.environment.get_nodes_in_module(module)
         # assumption: the global tour doesn't jump from a module to the other
         start = None
         end = None
@@ -227,7 +227,7 @@ class FredToursVisualizer(ToursVisualizer):
 
         logger.debug("Start: " + str(start))
         logger.debug("End: " + str(end))
-        module_entrance = self.distances.get_module_entrance_node(module)
+        module_entrance = self.environment.get_module_entrance_node(module)
         module_inside = self.global_tour[start:end + 1]
         module_tour = [module_entrance] + module_inside + [module_entrance]
 
@@ -272,16 +272,16 @@ class IntToursVisualizer(ToursVisualizer):
     #  |----------     | --> red
     #  |----------    _|
 
-    def __init__(self, tours, distances):
-        self.length = self.__calculate_length(distances, tours)
-        super().__init__(tours, distances)
+    def __init__(self, tours, environment):
+        self.length = self.__calculate_length(environment, tours)
+        super().__init__(tours, environment)
 
     @staticmethod
-    def __calculate_length(distances, tours):
+    def __calculate_length(environment, tours):
         trimmed_tours = [t[1:-1] for t in tours]
         origin = tours[0][0]
 
         global_tour = [origin] + sum(trimmed_tours, []) + [origin]
 
-        length = distances.get_tour_length(global_tour)
+        length = environment.get_tour_length(global_tour)
         return length

@@ -1,44 +1,105 @@
+from environment import Environment
+
 __all__ = ["integer_solution"]
 
 import math
 
 from christofides import christofides_tsp
-from modularmatrix import ModularMatrix
 
 
-def integer_solution(distance_matrix, m, p, connections):
+def modules_tours_and_costs(environment: Environment) -> tuple:
     """
-    It returns a list of tours, one for each of the ``m`` agents.
+    Calculate the base tours and their costs
 
-    Args:
-        distance_matrix (2d array): the matrix describing the distances between all the nodes in a single module
-        m (int): number of agents
-        p (int): number of modules
-        connections (array of int): distances between modules
+    :param environment: a representation of the environment to explore. It contains information on the distances
+    between nodes and information on the structure of the environment in terms of modules.
+    :return (modules_tours, modules_cost)
+     modules_tours is a list of the "base tours" (where each  tour is a list of nodes), one for each type of module
+        in the environment
+      modules_cost is a list of costs of the "base tours" both variables have the same length and the elements in the
+        same position correspond to each other
+    """
+    # use christofides_tsp to get the path and its cost for each module
+    tours = []
+    costs = []
+
+    # we make the computation once for each type, if we encounter a repeated module we re-use values
+    # Notice: tours[i], costs[i], modules_type[i] refer to the same module
+    modules_type = []
+
+    for module in environment.modules:
+        if module.type not in modules_type:
+            tour, cost = christofides_tsp(module.distance_matrix)
+        else:
+            # find the first index that refers to a module of the same type
+            module_index = modules_type.index(module.type)
+            tour, cost = tours[module_index], costs[module_index]
+
+        tours.append(tour)
+        costs.append(cost)
+        modules_type.append(module.type)
+
+    return tours, costs
+
+
+def integer_solution(environment: Environment, m: int) -> list:
+    """
+    It returns a list of tours, one for each of the `m` agents.
+
+    :param environment: the modular matrix describing the structure of the environment
+    :param m: number of agents
+    :param p: number of modules
+    :return: a list of tours, where each tour has to be covered by its corresponding agent
     """
 
-    module_tour, module_tour_length = christofides_tsp(distance_matrix)
+    # single-module-tours and their costs
+    modules_tours, modules_costs = modules_tours_and_costs(environment)
+    splits = _calculate_split_points(m, environment.number_of_modules, environment.connections, modules_costs)
+    intervals = _intervals_from_split_points(environment.origin_node, splits, m, environment.number_of_modules)
 
-    splits = _calculate_split_points(m, p, connections, module_tour_length)
-    intervals = _intervals_from_split_points(module_tour[0], splits, m, p)
-
-    modular_matrix = ModularMatrix(distance_matrix, connections, p)
-    tours = _calculate_tours(intervals, modular_matrix, module_tour, origin_node=module_tour[0])
+    tours = _calculate_tours(intervals, environment, modules_tours)
     return tours
 
 
-def _calculate_tours(intervals, modular_matrix, module_tour, origin_node):
-    # trim the origin_node at the start and end of the tour
-    trimmed_module_tour = module_tour[1:-1]
+def _calculate_tours(intervals, environment, modules_tours):
+    """Calculate the tours, one for each agent, in terms of nodes to visit, in the right order in which they should
+    be visited
+
+    :param intervals: a list of 2-tuples where the first element represents the start of the interval and the last
+    represents the end. Each tuple represents the interval of modules that should be explored by one agent alone.
+    :param environment: an object that represent the environment to explore. It contains information on the distances
+    between nodes and information on the structure of the environment in terms of modules.
+    :param modules_tours:
+    :return: a list of tours, one for each agent, where each tour is a list of nodes that the correspondent agent
+    should explore, in the order in which they (the nodes) appear.
+     """
+
+    origin_node = environment.origin_node
 
     tours = []
-    for inter in intervals:  # inter is a tuple (start, end)
+    for inter in intervals:  # inter is a tuple (start_module, end_module)
         tour = [origin_node]
+
+        if inter[0] == 1:  # if we are in the first module, the origin node should not be included again
+            tour = []
+
         for i in range(inter[0], inter[1] + 1):
-            displacement = modular_matrix.get_module_entrance_node(i)
+            module_tour = modules_tours[i-1]
+            # trim the last node at the end of the tour: it is visited once, entering the node. There is no need to
+            # pass again (explicitly)
+            trimmed_module_tour = module_tour[:-1]
+
+            # displacement needed to shift the indexes of the "base tour" to the proper indexes
+            displacement = environment.get_module_entrance_node(i)
             shifted_module_tour = [node + displacement for node in trimmed_module_tour]
             tour.extend(shifted_module_tour)
-        tour.append(origin_node)
+
+        # make sure the last node is the origin node
+        # Notice: it should be ok to always just add it, but it may be a problem if we are in the first module,
+        # where, sometimes, the tour might naturally ends in the origin_node. To avoid too many considerations,
+        # we can just check and add it if needed.
+        if tour[-1] != origin_node:
+            tour.append(origin_node)
 
         tours.append(tour)
 
@@ -110,30 +171,29 @@ def _intervals_from_split_points(origin_node: int, splits: dict, m: int, p: int)
     return [(ab[0] + 1, ab[1] + 1) for ab in intervals]
 
 
-def _calculate_split_points(m, p, connections, tour_length):
+def _calculate_split_points(m, p, connections, tours_lengths):
     """Calculate, and return, all the split points of the current problem
 
     :param m: the number of robots
     :param p: the number of modules
     :param connections: an array containing the distances between consequent modules
-    :param tour_length: the length of the path inside a single module
+    :param tours_lengths: a list of the length of the path inside a single module, for each module
     :return: a dict of `Split`s indexed with tuples (lower_module, upper_module, number of agents)
     """
     splits = {}
 
     # Calculation of the two base cases
-
     # Base case 1: only one module
-    for i in range(p):
-        for k in range(1, m + 1):
-            value = _base_case_1_module(i, connections, tour_length)
+    for i in range(p):  # iterate on the modules
+        value = _base_case_1_module(i, connections, tours_lengths[i])
+        for k in range(1, m + 1):  # iterate on the number of robots
             splits[(i, i, k)] = Split(value, i, i, i, k)
 
     # Base case 2: only one robot
     k = 1
     for i in range(p):
         for j in range(i, p):
-            value = _base_case_1_robot(i, j, connections, tour_length)
+            value = _base_case_1_robot(i+1, j+1, connections, tours_lengths)
             splits[(i, j, k)] = Split(value, j, i, j, k)
 
     # Actual computation of all the other cases
@@ -155,10 +215,13 @@ def _base_case_1_module(module_index, connections, module_tour_length):
     return module_tour_length + 2 * sum(connections[:module_index])
 
 
-def _base_case_1_robot(lower_module, upper_module, connections, module_tour_length):
+def _base_case_1_robot(lower_module, upper_module, connections, tours_lengths):
     # if we have 1 robot, the cost of the path will be the module length multiplied by the number of modules,
     # summed to (twice) the cost to reach the farthest module
-    return (upper_module - lower_module + 1) * module_tour_length + 2 * sum(connections[:upper_module])
+
+    cost_to_farthest_module = sum(connections[:upper_module])  # no -1 because modules are indexed from 1
+    cost_of_modules_exploration = sum(tours_lengths[lower_module - 1:upper_module])  # same reason
+    return cost_of_modules_exploration + 2 * cost_to_farthest_module
 
 
 def _calculate_split(i: int, j: int, k: int, splits: dict) -> int:
