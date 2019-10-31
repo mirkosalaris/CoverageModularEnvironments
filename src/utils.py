@@ -20,3 +20,19 @@ def save_variables(variables, filename, folder=SAVE_FOLDER):
 def load_variables(filename, folder=SAVE_FOLDER):
     with open(folder + filename, 'rb') as f:
         return pickle.load(f)
+
+
+def max_length(tours, environment):
+    """
+    :returns a tuple (max_value, max_tour), where 'max_value' is the distance covered by the robot
+    that covers the maximum distance and 'max_tour' is the correspondent tour
+    """
+    max_tour = None
+    max_value = 0
+    for t in tours:
+        t_length = environment.get_distance_along_path(t[0], t[-1], t)
+        if t_length > max_value:
+            max_value = t_length
+            max_tour = t
+
+    return max_value, max_tour

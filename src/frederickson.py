@@ -5,13 +5,13 @@ from common import logger
 
 class Frederickson:
 
-    def __init__(self, distance_matrix, m):
+    def __init__(self, environment, m):
         """Store parameters and compute the Frederickson path given a distance matrix of an environment and the
         number of agents available
 
-        :param distance_matrix: a square matrix
-        :param m: """
-        self.distance_matrix = distance_matrix
+        :param environment: a representation of the environment in terms of distance matrix
+        :param m: number of agents"""
+        self.environment = environment
         self.m = m
         self.__global_tour_calculated = False
         self.__global_tour = None
@@ -42,7 +42,7 @@ class Frederickson:
         # For each agent, find the last vertex such that the cost from the origin, along its path,
         # is not greater than (j/m) * (length - 2*cmax)+cmax
         last_vertices = self._last_vertices(tour, length)
-        logger.debug("last vertices: " + str(last_vertices))
+        #logger.debug("last vertices: " + str(last_vertices))
 
         # Step 3
         # Obtain the j-tour by forming a subtour that:
@@ -54,7 +54,7 @@ class Frederickson:
         return paths
 
     def _find_1_tour(self):
-        return christofides_tsp(self.distance_matrix)
+        return christofides_tsp(self.environment)
 
     def _last_vertices(self, tour, length):
         """For each agent, find the last vertex it has to visit
@@ -68,8 +68,8 @@ class Frederickson:
         :return: a list of vertexes, each one being the last vertex that the corresponding agent has to visit
         """
         origin_node = tour[0]
-        cmax = max([self.distance_matrix[origin_node, i] for i in range(len(self.distance_matrix))])
-        logger.debug("cmax" + str(cmax) + "length" + str(length))
+        cmax = max([self.environment[origin_node, i] for i in range(len(self.environment))])
+        #logger.debug("cmax" + str(cmax) + "length" + str(length))
 
         # tour[1] if available, otherwise tour[0]. This is just to avoid index out of bound exception
         subtour_first_vertex = tour[1 if len(tour) > 1 else 0]
@@ -82,12 +82,12 @@ class Frederickson:
             j_cost_limit = (j / self.m) * (length - 2 * cmax) + cmax
 
             # we will calculate this path cost incrementally. This is the base, from the origin to the first vertex.
-            path_cost = self.distance_matrix[origin_node, subtour_first_vertex]
+            path_cost = self.environment[origin_node, subtour_first_vertex]
 
             for i in range(next_i, len(tour)-1):  # the -1 is because the origin node is duplicated!
                 # incrementally calculate the path cost (if i==next_i no need to update the calculation)
                 if i != next_i:
-                    path_cost += self.distance_matrix[tour[i-1], tour[i]]
+                    path_cost += self.environment[tour[i-1], tour[i]]
 
                 if path_cost <= j_cost_limit:
                     last_vertex_index[j] = i
