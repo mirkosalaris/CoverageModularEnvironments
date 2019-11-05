@@ -20,17 +20,28 @@ class Node:
 
 
 class Edge:
-    def __init__(self, edge_id, n1, n2):
+    EUCLIDEAN = 0
+    MANHATTAN = 1
+
+    def __init__(self, edge_id, n1, n2, edge_type=EUCLIDEAN):
         self.edge_id = edge_id
         self.n1 = n1
         self.n2 = n2
+        if edge_type != Edge.EUCLIDEAN and edge_type != Edge.MANHATTAN:
+            raise ValueError("Edge type should be either Edge.EUCLIDEAN or Edge.MANHATTAN"
+                             ", {} found instead".format(edge_type))
+        self.edge_type = edge_type
 
     @property
     def length(self):
-        return math.sqrt((self.n1.x - self.n2.x) ** 2 + (self.n1.y - self.n2.y) ** 2)
+        if self.edge_type == Edge.EUCLIDEAN:
+            return math.sqrt((self.n1.x - self.n2.x) ** 2 + (self.n1.y - self.n2.y) ** 2)
+        elif self.edge_type == Edge.MANHATTAN:
+            return abs(self.n1.x - self.n2.x) + abs(self.n1.y - self.n2.y)
 
 
 class Graph:
+
     def __init__(self):
         self.nodes = dict()
         self.next_node_id = 0
@@ -67,13 +78,16 @@ class Graph:
 
         return ids
 
-    def add_edge(self, n1, n2):
-        """n1: either a node_id or a node (in both cases, already in the graph)
-        n2: either a node_id or a node (in both cases, already in the graph)
+    def add_edge(self, n1, n2, dist_type=Edge.EUCLIDEAN):
+        """
+        Add and edge between the two nodes
+        Raises an exception if one of the nodes in input is not already in the graph
 
-        returns: the id of the new edge
-
-        raises exception if the (at least) one of the nodes in input is not already in the graph"""
+        :param n1: either a node_id or a node (in both cases, already in the graph)
+        :param n2: either a node_id or a node (in both cases, already in the graph)
+        :param dist_type: Either Edge.EUCLIDEAN or Edge.MANHATTAN
+        :return: the id of the new edge
+        """
         if type(n1) is int:
             n1 = self.nodes[n1]
         if type(n2) is int:
@@ -82,7 +96,7 @@ class Graph:
         if n1 not in self.nodes.values() or n2 not in self.nodes.values():
             raise Exception("The nodes in input must already be in the graph before inserting an edge")
 
-        new_edge = Edge(self.next_edge_id, n1, n2)
+        new_edge = Edge(self.next_edge_id, n1, n2, dist_type)
         self.edges[new_edge.edge_id] = new_edge
         self.__edges_by_node[n1.node_id].append(new_edge)
 
@@ -91,7 +105,7 @@ class Graph:
         return new_edge.edge_id
 
     def get_incidents_on_node(self, node):
-        return list(self.__edges_by_node)
+        return list(self.__edges_by_node[node.node_id])
 
 
 def floyd_warshall(n, edges):

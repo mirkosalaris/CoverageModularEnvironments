@@ -3,7 +3,7 @@ __all__ = ['get_graph']
 import numpy as np
 from bs4 import BeautifulSoup
 
-from graph import Graph
+from graph import Graph, Edge
 
 
 def find_centroid(space, scaling_factor):
@@ -43,7 +43,7 @@ def connect_portals(graph, portals_ids):
     for por1_id in portals_ids:
         for por2_id in portals_ids:
             if por1_id != por2_id:
-                graph.add_edge(por1_id, por2_id)
+                graph.add_edge(por1_id, por2_id, dist_type=Edge.MANHATTAN)
 
 
 def get_graph(file, scaling_factor):
