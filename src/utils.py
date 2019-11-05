@@ -1,3 +1,4 @@
+import math
 import pickle
 
 from fileio import parse_file
@@ -36,3 +37,24 @@ def max_length(tours, environment):
             max_tour = t
 
     return max_value, max_tour
+
+
+def avg_length(tours, environment):
+    length_sum = 0
+    for t in tours:
+        length_sum += environment.get_distance_along_path(t[0], t[-1], t)
+
+    return length_sum / len(tours)
+
+
+def std_length(tours, environment):
+    avg = avg_length(tours, environment)
+
+    std_sum = 0
+    for t in tours:
+        length = environment.get_distance_along_path(t[0], t[-1], t)
+        std_sum += (length - avg) ** 2
+
+    std = math.sqrt(std_sum / len(tours))
+
+    return std
