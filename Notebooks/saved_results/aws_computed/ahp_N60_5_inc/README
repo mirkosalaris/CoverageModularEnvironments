@@ -1,0 +1,6 @@
+These files contains only one result, for the case N=60, m=5, s="increasing"
+
+The three base modules user are:  
+little_module = "Valleceppi_P0"  # length: 171
+middle_module = "scuola_3"  # length: 270
+big_module = "battle_creekhs_1"  # length: 334
