@@ -1,14 +1,9 @@
-This version of the aws results contains all the results for Frederickson and
-Integer algorithms for N=30,60,120; m=5,10,20 and the three patterns: random,
-decreasing, increasing. The file that refer to Fred, Int can be properly read considering the same order of the content of the file smN.dump
+little_module = "Franch1"  # tsp length: 198, number of nodes: 40
+middle_module = "battle_creekhs_1"  # tsp length: 334, number of nodes: 47
+big_module = "RomainRolland1"  # tsp length: 438, number of nodes: 80
 
-For AHP we only have the results for the 9 cases with N=30 (and in a separate folder one result for N=60). As before, the file smN_ahp_30.dump is key to interpret the ahp dump files.
+Dati Int: completi
 
-For this version, the graphs used have been extracted using Manhattan distances to
-connect the portals between one another and the scale from xml to meters has been
-corrected.
+Dati Fred: completi per N=30 e N=60
 
-The modules used for this results are:
-little_module = "Valleceppi_P0"  # length: 171
-middle_module = "scuola_3"  # length: 270
-big_module = "battle_creekhs_1"  # length: 334
+Dati AHP: solo N=30, m=5,10
