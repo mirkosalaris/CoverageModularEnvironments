@@ -58,3 +58,13 @@ def std_length(tours, environment):
     std = math.sqrt(std_sum / len(tours))
 
     return std
+
+
+def count_modules(tours, env):
+    modules_visited = []
+    for tour in tours:
+        modules = [env.get_module_and_index(tour[i])[0].index for i in range(len(tour))]
+        number_of_modules_visited = len(set(modules[1:-1]))
+        modules_visited.append(number_of_modules_visited)
+
+    return modules_visited
