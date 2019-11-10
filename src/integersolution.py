@@ -7,12 +7,14 @@ import math
 from christofides import christofides_tsp
 
 
-def modules_tours_and_costs(environment: Environment) -> tuple:
+def modules_tours_and_costs(environment: Environment, agnostic_mode=False) -> tuple:
     """
     Calculate the base tours and their costs
 
     :param environment: a representation of the environment to explore. It contains information on the distances
     between nodes and information on the structure of the environment in terms of modules.
+    :param agnostic_mode: if False (default), the algorithm is efficient and compute the tsp approximation once for
+    each type of module. If True, the algorithm computes the tsp approximation for each module.
     :return (modules_tours, modules_cost)
      modules_tours is a list of the "base tours" (where each  tour is a list of nodes), one for each type of module
         in the environment
@@ -28,7 +30,7 @@ def modules_tours_and_costs(environment: Environment) -> tuple:
     modules_type = []
 
     for module in environment.modules:
-        if module.type not in modules_type:
+        if agnostic_mode or module.type not in modules_type:
             tour, cost = christofides_tsp(module.distance_matrix)
         else:
             # find the first index that refers to a module of the same type
@@ -42,18 +44,19 @@ def modules_tours_and_costs(environment: Environment) -> tuple:
     return tours, costs
 
 
-def integer_solution(environment: Environment, m: int) -> list:
+def integer_solution(environment: Environment, m: int, agnostic_mode=False) -> list:
     """
     It returns a list of tours, one for each of the `m` agents.
 
     :param environment: the modular matrix describing the structure of the environment
     :param m: number of agents
-    :param p: number of modules
+    :param agnostic_mode: if False (default), the algorithm is efficient and compute the tsp approximation once for
+    each type of module. If True, the algorithm computes the tsp approximation for each module.
     :return: a list of tours, where each tour has to be covered by its corresponding agent
     """
 
     # single-module-tours and their costs
-    modules_tours, modules_costs = modules_tours_and_costs(environment)
+    modules_tours, modules_costs = modules_tours_and_costs(environment, agnostic_mode)
     splits = _calculate_split_points(m, environment.number_of_modules, environment.connections, modules_costs)
     intervals = _intervals_from_split_points(environment.origin_node, splits, m, environment.number_of_modules)
 
