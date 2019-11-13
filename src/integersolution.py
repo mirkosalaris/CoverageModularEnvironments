@@ -44,7 +44,7 @@ def modules_tours_and_costs(environment: Environment, agnostic_mode=False) -> tu
     return tours, costs
 
 
-def integer_solution(environment: Environment, m: int, LOG_m=False, agnostic_mode=False) -> list:
+def integer_solution(environment: Environment, m: int, LOG_m=True, agnostic_mode=False) -> list:
     """
     It returns a list of tours, one for each of the `m` agents.
 
@@ -53,7 +53,8 @@ def integer_solution(environment: Environment, m: int, LOG_m=False, agnostic_mod
     :param agnostic_mode: if False (default), the algorithm is efficient and compute the tsp approximation once for
     each type of module. If True, the algorithm computes the tsp approximation for each module.
     :param LOG_m: boolean value. If set to true, the algorithm runtime is proportional to 'log(m)', if False is
-    proportional to 'm'.
+    proportional to 'm'. Default to True. This is kept only for retro compatibility, shouldn't there be the need to
+    have datas from the old implementation (without log improvement)
     :return: a list of tours, where each tour has to be covered by its corresponding agent
     """
 
@@ -198,6 +199,8 @@ def _calculate_split_points(m, p, connections, tours_lengths, LOG_m):
     :param p: the number of modules
     :param connections: an array containing the distances between consequent modules
     :param tours_lengths: a list of the length of the path inside a single module, for each module
+    :param LOG_m: boolean value. If set to true, the algorithm runtime is proportional to 'log(m)', if False is
+    proportional to 'm'.
     :return: a dict of `Split`s indexed with tuples (lower_module, upper_module, number of agents)
     """
     splits = {}
