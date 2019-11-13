@@ -44,7 +44,7 @@ def modules_tours_and_costs(environment: Environment, agnostic_mode=False) -> tu
     return tours, costs
 
 
-def integer_solution(environment: Environment, m: int, agnostic_mode=False) -> list:
+def integer_solution(environment: Environment, m: int, LOG_m=False, agnostic_mode=False) -> list:
     """
     It returns a list of tours, one for each of the `m` agents.
 
@@ -52,12 +52,15 @@ def integer_solution(environment: Environment, m: int, agnostic_mode=False) -> l
     :param m: number of agents
     :param agnostic_mode: if False (default), the algorithm is efficient and compute the tsp approximation once for
     each type of module. If True, the algorithm computes the tsp approximation for each module.
+    :param LOG_m: boolean value. If set to true, the algorithm runtime is proportional to 'log(m)', if False is
+    proportional to 'm'.
     :return: a list of tours, where each tour has to be covered by its corresponding agent
     """
 
     # single-module-tours and their costs
     modules_tours, modules_costs = modules_tours_and_costs(environment, agnostic_mode)
-    splits = _calculate_split_points(m, environment.number_of_modules, environment.connections, modules_costs)
+    splits = _calculate_split_points(
+        m, environment.number_of_modules, environment.connections, modules_costs, LOG_m=LOG_m)
     intervals = _intervals_from_split_points(environment.origin_node, splits, m, environment.number_of_modules)
 
     tours = _calculate_tours(intervals, environment, modules_tours)
@@ -87,7 +90,7 @@ def _calculate_tours(intervals, environment, modules_tours):
             tour = []
 
         for i in range(inter[0], inter[1] + 1):
-            module_tour = modules_tours[i-1]
+            module_tour = modules_tours[i - 1]
             # trim the last node at the end of the tour: it is visited once, entering the node. There is no need to
             # pass again (explicitly)
             trimmed_module_tour = module_tour[:-1]
@@ -127,7 +130,7 @@ def _recursive_interesting_split_points(splits, agents_number, lower, upper, int
         interesting_split_points.append(upper)
         return
 
-    # index of module that split in (about) half the two parts (lower and upper)
+    # index of module that splits in (about) half the two parts (lower and upper)
     main_split = splits[(lower, upper, agents_number)].get_split_point()
 
     # add to the array all the split points that come BEFORE the main one
@@ -174,7 +177,21 @@ def _intervals_from_split_points(origin_node: int, splits: dict, m: int, p: int)
     return [(ab[0] + 1, ab[1] + 1) for ab in intervals]
 
 
-def _calculate_split_points(m, p, connections, tours_lengths):
+def _useful_k(m: int) -> list:
+    assert m >= 1, "Expected an integer >= 1, received " + str(m)
+
+    if m <= 2:  # if it's either 1 or 2
+        return []
+    if m == 3:
+        return [2]
+    elif m % 2 == 0:  # m is even
+        return _useful_k(m // 2) + [m // 2]
+    else:  # m is odd
+        odd_half = m // 2 if m % 4 == 3 else m // 2 + 1
+        return _useful_k(odd_half) + [m // 2, m // 2 + 1]
+
+
+def _calculate_split_points(m, p, connections, tours_lengths, LOG_m):
     """Calculate, and return, all the split points of the current problem
 
     :param m: the number of robots
@@ -196,12 +213,16 @@ def _calculate_split_points(m, p, connections, tours_lengths):
     k = 1
     for i in range(p):
         for j in range(i, p):
-            value = _base_case_1_robot(i+1, j+1, connections, tours_lengths)
+            value = _base_case_1_robot(i + 1, j + 1, connections, tours_lengths)
             splits[(i, j, k)] = Split(value, j, i, j, k)
 
+    if LOG_m == True:
+        k_values = _useful_k(m)
+    else:
+        k_values = list(range(2, math.ceil(m / 2) + 1))
+
     # Actual computation of all the other cases
-    while k < math.ceil(m / 2):
-        k += 1
+    for k in k_values:
         for i in range(p):
             for j in range(i + 1, p):  # case j==i already computed as base case
                 _calculate_split(i, j, k, splits)  # in-place update of `splits`
