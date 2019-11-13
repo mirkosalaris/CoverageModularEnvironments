@@ -2,8 +2,10 @@ little_module = "Franch1"  # tsp length: 198, number of nodes: 40
 middle_module = "battle_creekhs_1"  # tsp length: 334, number of nodes: 47
 big_module = "RomainRolland1"  # tsp length: 438, number of nodes: 80
 
-Dati Int: completi
+Int: complete
 
-Dati Fred: completi per N=30 e N=60
+Fred: complete for N=30 and N=60
 
-Dati AHP: solo N=30, m=5,10
+AHP: solo N=30, m=5,10
+
+Data for Int and Agnostic Int have been computed with the log(m) implementation. Old int data have been moved to ./int_nolog/
