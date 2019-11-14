@@ -9,7 +9,7 @@ PORTALS_COLOR = "green"
 CENTROIDS_SIZE = 4
 PORTALS_SIZE = 4
 
-EDGES_WIDTH = 2
+EDGES_WIDTH = 4
 
 BASE_SCALE_FACTOR = 1
 
@@ -25,7 +25,7 @@ def scale(arr, scale_factor=BASE_SCALE_FACTOR):
         raise Exception("The input parameters must be an array of numbers (int or float) or an array of tuples")
 
 
-def dots(draw, points, scale_factor=BASE_SCALE_FACTOR, size=4, color="red"):
+def dots(draw, points, scale_factor=BASE_SCALE_FACTOR, size=12, color="red"):
     points = scale(points, scale_factor)
     for p in points:
         x0 = p[0] - size // 2
@@ -35,28 +35,16 @@ def dots(draw, points, scale_factor=BASE_SCALE_FACTOR, size=4, color="red"):
         draw.rectangle([x0, y0, x1, y1], fill=color)
 
 
-def rectangles(draw, points, scale_factor=BASE_SCALE_FACTOR, color="blue"):
+def rectangles(draw, points, scale_factor=BASE_SCALE_FACTOR, color="yellow"):
     points = scale(points, scale_factor)
     for rect in points:
         draw.rectangle(rect, outline=color)
 
 
-def lines(draw, lines_coords, scale_factor=BASE_SCALE_FACTOR, width=EDGES_WIDTH, color="yellow"):
+def lines(draw, lines_coords, scale_factor=BASE_SCALE_FACTOR, width=EDGES_WIDTH, color="blue"):
     lines_coords = scale(lines_coords, scale_factor)
     for pp in lines_coords:
         draw.line(pp, fill=color, width=width)
-
-
-def draw_boxes(draw, points, color=BOX_COLOR):
-    rectangles(draw, points, color)
-
-
-def draw_centroids(draw, points, size=CENTROIDS_SIZE, color=CENTROIDS_COLOR):
-    dots(draw, points, size, color)
-
-
-def draw_portals(draw, points, size=PORTALS_SIZE, color=PORTALS_COLOR):
-    dots(draw, points, size, color)
 
 
 def draw_nodes(drawing, graph, scale_factor=BASE_SCALE_FACTOR):
