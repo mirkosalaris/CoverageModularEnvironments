@@ -58,8 +58,8 @@ def draw_edges(drawing, graph, scale_factor=BASE_SCALE_FACTOR):
 
 
 def draw_graph(drawing, graph, scale_factor=BASE_SCALE_FACTOR):
-    draw_nodes(drawing, graph, scale_factor)
     draw_edges(drawing, graph, scale_factor)
+    draw_nodes(drawing, graph, scale_factor)
 
 
 def plot_graph(graph, filename, scale_factor=BASE_SCALE_FACTOR):
